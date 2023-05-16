@@ -65,16 +65,17 @@ async function run() {
     });
     // update booking
     app.patch("/bookings/:id", async (req, res) => {
-      const updateBooking = req.body;
       const id = req.params.id;
+      const updateBooking = req.body;
       const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
+
       const updateDoc = {
         $set: {
           status: updateBooking.status,
         },
       };
-      const result = await bookings.updateOne(filter, updateDoc, options);
+
+      const result = await bookings.updateOne(filter, updateDoc);
       res.send(result);
     });
 
