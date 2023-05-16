@@ -1,24 +1,19 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
 const PORT = process.env.PORT || 1010;
 
 app.get("/", (req, res) => {
   res.send("<h1>Server is running</h1>");
 });
-app.get("/ki", async (req, res) => {
-  // const result = await collection.find().toArray();
-  res.send("hello");
-});
-// const uri = `mongodb+srv://${process.env.USERNAME}:${process.env.PASSWORD}@learntng.g96agpr.mongodb.net/?retryWrites=true&w=majority`;
-const uri = `mongodb://car-doctor:IqBiDl1k3tH6CIC1@ac-jsn4phu-shard-00-00.g96agpr.mongodb.net:27017,ac-jsn4phu-shard-00-01.g96agpr.mongodb.net:27017,ac-jsn4phu-shard-00-02.g96agpr.mongodb.net:27017/?ssl=true&replicaSet=atlas-85j63k-shard-0&authSource=admin&retryWrites=true&w=majority`;
 
-// const uri =
-//   "mongodb+srv://car-doctor:IqBiDl1k3tH6CIC1@learntng.g96agpr.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.DB_URI;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -28,12 +23,40 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyJWT = (req, res, next) => {
+  console.log("hitting verifyJWT");
+  console.log(req.headers.authorization);
+  const authorize = req.headers.authorization;
+  if (!authorize) {
+    return res.status(401).send({ error: true, message: "Unauthorize User" });
+  }
+  const token = authorize.split(" ")[1];
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    if (err) {
+      res.status(403).send({ error: true, message: "Unauthorize user..." });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
     await client.connect();
     const collection = client.db("CAR_DOCTOR").collection("services");
     const bookings = client.db("CAR_DOCTOR").collection("bookings");
 
+    // jwt Route
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.JWT_SECRET_KEY, {
+        expiresIn: "1h",
+      });
+      res.status(201).send({ token });
+      // console.log({ token });
+    });
+
+    // services route
     app.get("/services", async (req, res) => {
       const result = await collection.find().toArray();
       res.send(result);
@@ -49,7 +72,8 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/bookings", async (req, res) => {
+    // booking route
+    app.get("/bookings", verifyJWT, async (req, res) => {
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
