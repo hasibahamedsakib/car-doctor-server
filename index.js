@@ -24,8 +24,6 @@ const client = new MongoClient(uri, {
 });
 
 const verifyJWT = (req, res, next) => {
-  console.log("hitting verifyJWT");
-  console.log(req.headers.authorization);
   const authorize = req.headers.authorization;
   if (!authorize) {
     return res.status(401).send({ error: true, message: "Unauthorize User" });
@@ -74,6 +72,12 @@ async function run() {
 
     // booking route
     app.get("/bookings", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (!decoded) {
+        return res
+          .status(403)
+          .send({ error: true, message: "do not access others information" });
+      }
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
