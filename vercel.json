@@ -1,6 +1,5 @@
 {
     "version": 2,
-    "name": "car-doctor-server",
     "builds": [
         {
             "src": "./index.js",

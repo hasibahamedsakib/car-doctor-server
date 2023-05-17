@@ -40,7 +40,7 @@ const verifyJWT = (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const collection = client.db("CAR_DOCTOR").collection("services");
     const bookings = client.db("CAR_DOCTOR").collection("bookings");
 
@@ -115,10 +115,10 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("CAR_DOCTOR").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("CAR_DOCTOR").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
   }
 }
